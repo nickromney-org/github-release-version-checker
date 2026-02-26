@@ -22,29 +22,29 @@ The GitHub Release Version Checker helps you stay current with software releases
 <!-- version-check-start -->
 ## Daily Version Checks
 
-**Last updated:** 25 Feb 2026 09:39 UTC
+**Last updated:** 26 Feb 2026 09:35 UTC
 
 | Repository | Status | Latest Version | Command |
 |------------|--------|----------------|---------|
-| [GitHub Actions Runner](https://github.com/actions/runner/releases/tag/v2.331.0) | ![Status](https://img.shields.io/badge/current-green) | `v2.331.0` | `github-release-version-checker` |
-| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.14.5) | ![Status](https://img.shields.io/badge/current-green) | `v1.14.5` | `github-release-version-checker --repo hashicorp/terraform` |
+| [GitHub Actions Runner](https://github.com/actions/runner/releases/tag/v2.332.0) | ![Status](https://img.shields.io/badge/current-green) | `v2.332.0` | `github-release-version-checker` |
+| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.14.6) | ![Status](https://img.shields.io/badge/current-green) | `v1.14.6` | `github-release-version-checker --repo hashicorp/terraform` |
 | [Node.js](https://github.com/nodejs/node/releases/tag/v25.7.0) | ![Status](https://img.shields.io/badge/current-green) | `v25.7.0` | `github-release-version-checker --repo node` |
 
 ### GitHub Actions Runner Release Timeline
 
 ```text
-2.331.0
+2.332.0
 
 
 📅 Release Expiry Timeline
 ─────────────────────────────────────────────────────
 Version    Release Date   Expiry Date    Status
-2.328.0    13 Aug 2025    13 Nov 2025    ❌ Expired 103 days ago
-2.329.0    14 Oct 2025    19 Dec 2025    ❌ Expired 67 days ago
-2.330.0    19 Nov 2025    08 Feb 2026    ❌ Expired 16 days ago
-2.331.0    09 Jan 2026    -              ✅ Latest (46 days ago)
+2.329.0    14 Oct 2025    19 Dec 2025    ❌ Expired 68 days ago
+2.330.0    19 Nov 2025    08 Feb 2026    ❌ Expired 17 days ago
+2.331.0    09 Jan 2026    27 Mar 2026    ✅ Valid (29 days left)
+2.332.0    25 Feb 2026    -              ✅ Latest (today)
 
-Checked at: 25 Feb 2026 09:39:05 UTC
+Checked at: 26 Feb 2026 09:35:02 UTC
 ```
 
 ## Quick Start
