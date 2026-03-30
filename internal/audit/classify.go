@@ -98,10 +98,7 @@ func pinningForOccurrence(occurrence Occurrence) (Pinning, bool) {
 		return "", false
 	}
 
-	ref := occurrence.Ref
-	if strings.HasPrefix(ref, "refs/tags/") {
-		ref = strings.TrimPrefix(ref, "refs/tags/")
-	}
+	ref := strings.TrimPrefix(occurrence.Ref, "refs/tags/")
 	if semverishRefPattern.MatchString(ref) {
 		return PinningSemver, true
 	}

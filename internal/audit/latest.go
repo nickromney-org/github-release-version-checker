@@ -2,7 +2,6 @@ package audit
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -338,10 +337,10 @@ func releasePublishedAt(release *gh.RepositoryRelease) time.Time {
 		return time.Time{}
 	}
 	if release.PublishedAt != nil {
-		return release.PublishedAt.Time.UTC()
+		return release.PublishedAt.UTC()
 	}
 	if release.CreatedAt != nil {
-		return release.CreatedAt.Time.UTC()
+		return release.CreatedAt.UTC()
 	}
 	return time.Time{}
 }
@@ -351,10 +350,10 @@ func commitPublishedAt(commit *gh.RepositoryCommit) time.Time {
 		return time.Time{}
 	}
 	if commit.Commit.Committer != nil && commit.Commit.Committer.Date != nil {
-		return commit.Commit.Committer.Date.Time.UTC()
+		return commit.Commit.Committer.Date.UTC()
 	}
 	if commit.Commit.Author != nil && commit.Commit.Author.Date != nil {
-		return commit.Commit.Author.Date.Time.UTC()
+		return commit.Commit.Author.Date.UTC()
 	}
 	return time.Time{}
 }
@@ -413,9 +412,4 @@ func shaCacheKey(kind Kind, repo, ref string) string {
 
 func intPtr(value int) *int {
 	return &value
-}
-
-func isRateLimited(err error) bool {
-	var rateErr *gh.RateLimitError
-	return errors.As(err, &rateErr)
 }

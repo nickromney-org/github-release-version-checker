@@ -35,7 +35,9 @@ func main() {
 		errorOutput := map[string]string{
 			"error": err.Error(),
 		}
-		json.NewEncoder(os.Stdout).Encode(errorOutput)
+		if encodeErr := json.NewEncoder(os.Stdout).Encode(errorOutput); encodeErr != nil {
+			fmt.Fprintf(os.Stderr, "Error encoding JSON: %v\n", encodeErr)
+		}
 		os.Exit(1)
 	}
 

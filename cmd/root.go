@@ -565,15 +565,16 @@ func writeGitHubSummary(summaryFile string, analysis *checker.Analysis) error {
 	}
 
 	// Action required section
-	if status == checker.StatusExpired {
+	switch status {
+	case checker.StatusExpired:
 		fmt.Fprintf(f, "\n### ⚠️ Action Required\n\n")
 		fmt.Fprintf(f, "**Update to v%s or later immediately.** ", analysis.FirstNewerVersion)
 		fmt.Fprintf(f, "GitHub will not queue jobs to runners with expired versions.\n")
-	} else if status == checker.StatusCritical {
+	case checker.StatusCritical:
 		daysLeft := analysis.MaxAgeDays - analysis.DaysSinceUpdate
 		fmt.Fprintf(f, "\n### ⚠️ Update Soon\n\n")
 		fmt.Fprintf(f, "Version expires in **%d days**. Update to v%s or later.\n", daysLeft, analysis.FirstNewerVersion)
-	} else if status == checker.StatusWarning {
+	case checker.StatusWarning:
 		fmt.Fprintf(f, "\n### ℹ️ Update Available\n\n")
 		fmt.Fprintf(f, "A newer version (v%s) is available.\n", analysis.LatestVersion)
 	}
