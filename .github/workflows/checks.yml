@@ -15,16 +15,16 @@ jobs:
       actions: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6.3.0
         with:
           go-version: "1.21"
           cache: true
 
       - name: checkov scan
-        uses: bridgecrewio/checkov-action@v12
+        uses: bridgecrewio/checkov-action@v12.1347.0
         with:
           directory: "."
           framework: all
@@ -36,7 +36,7 @@ jobs:
           skip_check: CKV_GHA_7,CKV2_GHA_1
 
       - name: yaml-lint
-        uses: ibiqlik/action-yamllint@v3
+        uses: ibiqlik/action-yamllint@v3.1.1
         with:
           file_or_dir: .github/workflows
           format: github
@@ -45,6 +45,6 @@ jobs:
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Run linter
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v9.2.0
         with:
           version: latest

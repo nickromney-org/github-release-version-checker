@@ -8,18 +8,22 @@ import (
 	"github.com/nickromney-org/github-release-version-checker/pkg/types"
 )
 
-func makeRelease(ver string, daysAgo int) types.Release {
+func makeReleaseAt(ver string, daysAgo int, now time.Time) types.Release {
 	return types.Release{
 		Version:     semver.MustParse(ver),
-		PublishedAt: time.Now().AddDate(0, 0, -daysAgo),
+		PublishedAt: now.AddDate(0, 0, -daysAgo),
 		URL:         "https://github.com/test/test/releases/tag/" + ver,
 	}
 }
 
 func TestDaysPolicy_Evaluate(t *testing.T) {
+	now := time.Date(2026, time.March, 30, 12, 0, 0, 0, time.UTC)
 	policy := &DaysPolicy{
 		CriticalDays: 12,
 		MaxDays:      30,
+		Now: func() time.Time {
+			return now
+		},
 	}
 
 	tests := []struct {
@@ -42,7 +46,7 @@ func TestDaysPolicy_Evaluate(t *testing.T) {
 		{
 			name:          "5 days old - warning",
 			comparison:    "2.328.0",
-			newerReleases: []types.Release{makeRelease("2.329.0", 5)},
+			newerReleases: []types.Release{makeReleaseAt("2.329.0", 5, now)},
 			wantExpired:   false,
 			wantCritical:  false,
 			wantWarning:   true,
@@ -51,7 +55,7 @@ func TestDaysPolicy_Evaluate(t *testing.T) {
 		{
 			name:          "12 days old - critical",
 			comparison:    "2.328.0",
-			newerReleases: []types.Release{makeRelease("2.329.0", 12)},
+			newerReleases: []types.Release{makeReleaseAt("2.329.0", 12, now)},
 			wantExpired:   false,
 			wantCritical:  true,
 			wantWarning:   false,
@@ -60,7 +64,7 @@ func TestDaysPolicy_Evaluate(t *testing.T) {
 		{
 			name:          "20 days old - still critical",
 			comparison:    "2.328.0",
-			newerReleases: []types.Release{makeRelease("2.329.0", 20)},
+			newerReleases: []types.Release{makeReleaseAt("2.329.0", 20, now)},
 			wantExpired:   false,
 			wantCritical:  true,
 			wantWarning:   false,
@@ -69,7 +73,7 @@ func TestDaysPolicy_Evaluate(t *testing.T) {
 		{
 			name:          "30 days old - expired",
 			comparison:    "2.327.0",
-			newerReleases: []types.Release{makeRelease("2.328.0", 30)},
+			newerReleases: []types.Release{makeReleaseAt("2.328.0", 30, now)},
 			wantExpired:   true,
 			wantCritical:  false,
 			wantWarning:   false,
@@ -78,7 +82,7 @@ func TestDaysPolicy_Evaluate(t *testing.T) {
 		{
 			name:          "35 days old - expired",
 			comparison:    "2.327.0",
-			newerReleases: []types.Release{makeRelease("2.328.0", 35)},
+			newerReleases: []types.Release{makeReleaseAt("2.328.0", 35, now)},
 			wantExpired:   true,
 			wantCritical:  false,
 			wantWarning:   false,
@@ -90,9 +94,9 @@ func TestDaysPolicy_Evaluate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := policy.Evaluate(
 				semver.MustParse(tt.comparison),
-				time.Now(),
+				now,
 				semver.MustParse("2.329.0"),
-				time.Now(),
+				now,
 				tt.newerReleases,
 			)
 
@@ -113,6 +117,7 @@ func TestDaysPolicy_Evaluate(t *testing.T) {
 }
 
 func TestVersionsPolicy_Evaluate(t *testing.T) {
+	now := time.Date(2026, time.March, 30, 12, 0, 0, 0, time.UTC)
 	policy := &VersionsPolicy{
 		MaxMinorVersionsBehind: 3,
 	}
@@ -142,7 +147,7 @@ func TestVersionsPolicy_Evaluate(t *testing.T) {
 			comparison: "1.33.0",
 			latest:     "1.34.0",
 			newerReleases: []types.Release{
-				makeRelease("1.34.0", 5),
+				makeReleaseAt("1.34.0", 5, now),
 			},
 			wantExpired:        false,
 			wantCritical:       false,
@@ -154,8 +159,8 @@ func TestVersionsPolicy_Evaluate(t *testing.T) {
 			comparison: "1.32.0",
 			latest:     "1.34.0",
 			newerReleases: []types.Release{
-				makeRelease("1.34.0", 5),
-				makeRelease("1.33.0", 35),
+				makeReleaseAt("1.34.0", 5, now),
+				makeReleaseAt("1.33.0", 35, now),
 			},
 			wantExpired:        false,
 			wantCritical:       false,
@@ -167,9 +172,9 @@ func TestVersionsPolicy_Evaluate(t *testing.T) {
 			comparison: "1.31.0",
 			latest:     "1.34.0",
 			newerReleases: []types.Release{
-				makeRelease("1.34.0", 5),
-				makeRelease("1.33.0", 35),
-				makeRelease("1.32.0", 65),
+				makeReleaseAt("1.34.0", 5, now),
+				makeReleaseAt("1.33.0", 35, now),
+				makeReleaseAt("1.32.0", 65, now),
 			},
 			wantExpired:        false,
 			wantCritical:       true,
@@ -181,10 +186,10 @@ func TestVersionsPolicy_Evaluate(t *testing.T) {
 			comparison: "1.30.0",
 			latest:     "1.34.0",
 			newerReleases: []types.Release{
-				makeRelease("1.34.0", 5),
-				makeRelease("1.33.0", 35),
-				makeRelease("1.32.0", 65),
-				makeRelease("1.31.0", 95),
+				makeReleaseAt("1.34.0", 5, now),
+				makeReleaseAt("1.33.0", 35, now),
+				makeReleaseAt("1.32.0", 65, now),
+				makeReleaseAt("1.31.0", 95, now),
 			},
 			wantExpired:        true,
 			wantCritical:       false,
@@ -196,7 +201,7 @@ func TestVersionsPolicy_Evaluate(t *testing.T) {
 			comparison: "1.34.0",
 			latest:     "2.0.0",
 			newerReleases: []types.Release{
-				makeRelease("2.0.0", 5),
+				makeReleaseAt("2.0.0", 5, now),
 			},
 			wantExpired:  true,
 			wantCritical: false,
@@ -207,11 +212,11 @@ func TestVersionsPolicy_Evaluate(t *testing.T) {
 			comparison: "1.32.0",
 			latest:     "1.34.0",
 			newerReleases: []types.Release{
-				makeRelease("1.34.2", 1),
-				makeRelease("1.34.1", 5),
-				makeRelease("1.34.0", 10),
-				makeRelease("1.33.5", 20),
-				makeRelease("1.33.0", 35),
+				makeReleaseAt("1.34.2", 1, now),
+				makeReleaseAt("1.34.1", 5, now),
+				makeReleaseAt("1.34.0", 10, now),
+				makeReleaseAt("1.33.5", 20, now),
+				makeReleaseAt("1.33.0", 35, now),
 			},
 			wantExpired:        false,
 			wantCritical:       false,
@@ -224,9 +229,9 @@ func TestVersionsPolicy_Evaluate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := policy.Evaluate(
 				semver.MustParse(tt.comparison),
-				time.Now(),
+				now,
 				semver.MustParse(tt.latest),
-				time.Now(),
+				now,
 				tt.newerReleases,
 			)
 

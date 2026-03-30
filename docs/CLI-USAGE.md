@@ -6,6 +6,7 @@ Complete guide to using the GitHub Release Version Checker command-line interfac
 
 - [Basic Usage](#basic-usage)
 - [Supported Repositories](#supported-repositories)
+- [Workflow Auditing](#workflow-auditing)
 - [Output Formats](#output-formats)
 - [Command Line Options](#command-line-options)
 - [Examples](#examples)
@@ -97,6 +98,100 @@ github-release-version-checker --repo owner/repo -c 1.0.0
 # Using GitHub URL
 github-release-version-checker --repo https://github.com/owner/repo -c 1.0.0
 ```
+
+## Workflow Auditing
+
+Audit GitHub Actions usage, reusable workflows, and workflow container images.
+
+### Local-First Audits
+
+Scan a checked-out repository or workspace with no GitHub token:
+
+```bash
+# Single repository
+github-release-version-checker audit-workflows local --path .
+
+# Workspace with repo-name filtering
+github-release-version-checker audit-workflows local --path ~/src --repo-filter 'backend-api-*'
+
+# Only floating refs such as @main, @master, @latest
+github-release-version-checker audit-workflows local --path ~/src --only-floating
+
+# Use the default 7-day cooldown for upstream version resolution
+github-release-version-checker audit-workflows local --path ~/src
+
+# Disable the cooldown and take the immediate latest upstream version
+github-release-version-checker audit-workflows local --path ~/src --cooldown 0
+
+# Resolve the latest upstream SHA and show pinned uses lines
+github-release-version-checker audit-workflows local --path ~/src --pin-sha --view occurrences
+
+# Show absolute workflow paths for direct terminal or IDE opening
+github-release-version-checker audit-workflows local --path ~/src --view occurrences
+```
+
+### Remote Repository Audits
+
+```bash
+# Single repository on github.com
+github-release-version-checker audit-workflows repo --repo owner/repo
+
+# GitHub Enterprise host
+github-release-version-checker audit-workflows repo --repo owner/repo --host github.example.com
+```
+
+### Owner Audits
+
+```bash
+# Entire owner boundary (user or organisation)
+github-release-version-checker audit-workflows owner my-org
+
+# Filter repositories and export CSV
+github-release-version-checker audit-workflows owner my-org --repo-filter 'backend-api-*' --output csv
+
+# User owners scan public repos by default
+github-release-version-checker audit-workflows owner nickromney --repo-filter 'thesis-*'
+
+# If the token belongs to that user owner, private owned repos are included too
+github-release-version-checker audit-workflows owner nickromney --visibility private
+
+# org remains available for organisation-specific usage
+github-release-version-checker audit-workflows org my-org
+```
+
+Audit output views:
+
+- `--view summary` aggregates each dependency/ref pair with repo and occurrence counts
+- `--view occurrences` lists every repo, workflow path, job, step, and line number
+- local `--view occurrences` renders workflow paths as absolute filesystem paths
+- `LATEST AGE` shows how many days old the selected upstream release is
+- `LATEST` means the highest eligible upstream release or tag after cooldown; it is not restricted to the current major line already in use
+- `--pin-sha` resolves the latest upstream commit SHA and adds copy-pasteable pinned refs for actions
+- `--cooldown` defaults to `7 days`; use `--cooldown 0` to disable it
+
+Audit output formats:
+
+- `--output table`
+- `--output json`
+- `--output csv`
+- `--output markdown`
+
+### Shell Completions
+
+The CLI includes the built-in Cobra completion command:
+
+```bash
+# zsh
+github-release-version-checker completion zsh > ~/.zsh/completions/_github-release-version-checker
+
+# bash
+github-release-version-checker completion bash > ~/.local/share/bash-completion/completions/github-release-version-checker
+
+# fish
+github-release-version-checker completion fish > ~/.config/fish/completions/github-release-version-checker.fish
+```
+
+Use `github-release-version-checker completion --help` for the full set of supported shells.
 
 ## Output Formats
 

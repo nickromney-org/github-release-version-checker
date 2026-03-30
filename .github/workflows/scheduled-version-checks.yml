@@ -19,7 +19,7 @@ jobs:
           echo "::notice title=Workflow Run::${TIMESTAMP}"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Download version checker
         run: |

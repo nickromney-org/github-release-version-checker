@@ -18,6 +18,7 @@ func main() {
 	cmd.SetVersionInfo(Version, BuildTime, GitCommit)
 
 	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+		cmd.PrintError(err)
+		os.Exit(cmd.ExitCode(err))
 	}
 }
