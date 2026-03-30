@@ -61,6 +61,7 @@ func NewVersionsPolicy(maxMinorVersionsBehind int) *VersionsPolicy {
 type DaysPolicy struct {
 	CriticalDays int
 	MaxDays      int
+	Now          func() time.Time
 }
 
 func (p *DaysPolicy) Evaluate(
@@ -76,7 +77,11 @@ func (p *DaysPolicy) Evaluate(
 
 	// Calculate days since FIRST newer release
 	firstNewer := newerReleases[0]
-	daysSinceFirstNewer := int(time.Since(firstNewer.PublishedAt).Hours() / 24)
+	now := time.Now()
+	if p.Now != nil {
+		now = p.Now()
+	}
+	daysSinceFirstNewer := int(now.Sub(firstNewer.PublishedAt).Hours() / 24)
 
 	isExpired := daysSinceFirstNewer >= p.MaxDays
 	isCritical := daysSinceFirstNewer >= p.CriticalDays && !isExpired

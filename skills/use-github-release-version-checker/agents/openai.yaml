@@ -1,0 +1,7 @@
+interface:
+  display_name: "Use github-release-version-checker"
+  short_description: "Audit Actions usage and check release policy state"
+  default_prompt: "Use $use-github-release-version-checker to inspect GitHub release policy status or audit GitHub Actions workflow dependencies with explicit subcommands, preferring local-first scans and structured output."
+
+policy:
+  allow_implicit_invocation: true

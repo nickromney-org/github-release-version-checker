@@ -46,6 +46,27 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
+func TestNewClientWithOptionsEnterpriseHost(t *testing.T) {
+	client, err := NewClientWithOptions(ClientOptions{
+		Token: "ghp_test123",
+		Host:  "github.example.com",
+		Owner: "acme",
+		Repo:  "backend-api",
+	})
+	if err != nil {
+		t.Fatalf("NewClientWithOptions() error = %v", err)
+	}
+	if client == nil || client.gh == nil {
+		t.Fatal("expected client and underlying gh client")
+	}
+	if client.Owner != "acme" || client.Repo != "backend-api" {
+		t.Fatalf("unexpected client owner/repo: %s/%s", client.Owner, client.Repo)
+	}
+	if client.BaseURL != "https://github.example.com" {
+		t.Fatalf("BaseURL = %q, want https://github.example.com", client.BaseURL)
+	}
+}
+
 // TestParseRelease tests release parsing
 func TestParseRelease(t *testing.T) {
 	now := time.Now()

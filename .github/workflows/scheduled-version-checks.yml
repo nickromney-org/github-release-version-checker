@@ -15,11 +15,11 @@ jobs:
       - name: Set run title
         run: |
           TIMESTAMP=$(date -u +"%d %b %Y %H:%M UTC")
-          echo "WORKFLOW_TITLE=Version checks - ${TIMESTAMP}" >> $GITHUB_ENV
+          echo "WORKFLOW_TITLE=Version checks - ${TIMESTAMP}" >> "$GITHUB_ENV"
           echo "::notice title=Workflow Run::${TIMESTAMP}"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Download version checker
         run: |
@@ -36,8 +36,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           JSON=$(github-release-version-checker --json)
-          LATEST=$(echo "$JSON" | jq -r '.latest_version')
-          STATUS=$(echo "$JSON" | jq -r '.status')
+          LATEST=$(jq -r '.latest_version' <<<"$JSON")
+          STATUS=$(jq -r '.status' <<<"$JSON")
 
           case "$STATUS" in
             current) BADGE_COLOUR="green" ;;
@@ -50,13 +50,15 @@ jobs:
           # Capture verbose output for timeline display (redirect stderr to avoid mixing output)
           VERBOSE_OUTPUT=$(github-release-version-checker -v 2>/dev/null)
 
-          echo "latest=$LATEST" >> $GITHUB_OUTPUT
-          echo "status=$STATUS" >> $GITHUB_OUTPUT
-          echo "badge_colour=$BADGE_COLOUR" >> $GITHUB_OUTPUT
-          # Use delimiter for multiline output
-          echo "verbose_output<<EOF" >> $GITHUB_OUTPUT
-          echo "$VERBOSE_OUTPUT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "latest=$LATEST"
+            echo "status=$STATUS"
+            echo "badge_colour=$BADGE_COLOUR"
+            # Use delimiter for multiline output
+            echo "verbose_output<<EOF"
+            echo "$VERBOSE_OUTPUT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Check Terraform
         id: terraform
@@ -64,8 +66,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           JSON=$(github-release-version-checker --repo hashicorp/terraform --json)
-          LATEST=$(echo "$JSON" | jq -r '.latest_version')
-          STATUS=$(echo "$JSON" | jq -r '.status')
+          LATEST=$(jq -r '.latest_version' <<<"$JSON")
+          STATUS=$(jq -r '.status' <<<"$JSON")
 
           case "$STATUS" in
             current) BADGE_COLOUR="green" ;;
@@ -75,9 +77,11 @@ jobs:
             *) BADGE_COLOUR="lightgrey" ;;
           esac
 
-          echo "latest=$LATEST" >> $GITHUB_OUTPUT
-          echo "status=$STATUS" >> $GITHUB_OUTPUT
-          echo "badge_colour=$BADGE_COLOUR" >> $GITHUB_OUTPUT
+          {
+            echo "latest=$LATEST"
+            echo "status=$STATUS"
+            echo "badge_colour=$BADGE_COLOUR"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Check Node.js
         id: nodejs
@@ -85,8 +89,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           JSON=$(github-release-version-checker --repo node --json)
-          LATEST=$(echo "$JSON" | jq -r '.latest_version')
-          STATUS=$(echo "$JSON" | jq -r '.status')
+          LATEST=$(jq -r '.latest_version' <<<"$JSON")
+          STATUS=$(jq -r '.status' <<<"$JSON")
 
           case "$STATUS" in
             current) BADGE_COLOUR="green" ;;
@@ -96,9 +100,11 @@ jobs:
             *) BADGE_COLOUR="lightgrey" ;;
           esac
 
-          echo "latest=$LATEST" >> $GITHUB_OUTPUT
-          echo "status=$STATUS" >> $GITHUB_OUTPUT
-          echo "badge_colour=$BADGE_COLOUR" >> $GITHUB_OUTPUT
+          {
+            echo "latest=$LATEST"
+            echo "status=$STATUS"
+            echo "badge_colour=$BADGE_COLOUR"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update README status section
         run: |
@@ -118,9 +124,9 @@ jobs:
         id: changes
         run: |
           if git diff --quiet README.md; then
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Commit and push changes

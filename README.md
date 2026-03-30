@@ -13,8 +13,10 @@ The GitHub Release Version Checker helps you stay current with software releases
 **Key Features:**
 
 - **Multi-Repository Support**: Check versions for any GitHub repository
+- **Local-First Workflow Auditing**: Scan checked-out repositories without a token
 - **Flexible Policies**: Time-based (days) or semantic versioning-based (versions behind)
 - **Multiple Output Formats**: Terminal (colourised), JSON (automation), CI (GitHub Actions)
+- **Actions Supply-Chain Visibility**: Audit GitHub Actions refs, reusable workflows, and container images
 - **Fast & Lightweight**: Single binary, ~10ms startup, no dependencies
 - **Embedded Cache**: Minimizes API calls with intelligent release caching
 - **Public API**: Import as a Go library in your own applications
@@ -123,7 +125,118 @@ github-release-version-checker -c 2.328.0 --json
 github-release-version-checker -c 2.328.0 --ci
 ```
 
+**Audit checked-out repositories without a token:**
+
+```bash
+# Scan the current repository
+github-release-version-checker audit-workflows local --path .
+
+# Scan a workspace and only include backend API repos
+github-release-version-checker audit-workflows local --path ~/src --repo-filter 'backend-api-*'
+
+# Return machine-readable JSON and only show floating refs
+github-release-version-checker audit-workflows local --path ~/src --only-floating --output json
+
+# By default, only consider upstream versions at least 7 days old
+github-release-version-checker audit-workflows local --path ~/src
+
+# Disable the cooldown and use the immediate latest version
+github-release-version-checker audit-workflows local --path ~/src --cooldown 0
+
+# Resolve the latest upstream SHA and show ready-to-paste pinned refs
+github-release-version-checker audit-workflows local --path ~/src --pin-sha --view occurrences
+
+# Show one row per usage with absolute workflow paths that terminals can open directly
+github-release-version-checker audit-workflows local --path ~/src --view occurrences
+```
+
+**Audit remote repositories or owner boundaries:**
+
+```bash
+# Single repository
+github-release-version-checker audit-workflows repo --repo owner/repo
+
+# Entire owner boundary (user or organisation)
+github-release-version-checker audit-workflows owner my-org --repo-filter 'backend-api-*' --output csv
+
+# org remains available for organisation-specific usage
+github-release-version-checker audit-workflows org my-org
+
+# User owners include public repos by default. If your token belongs to that owner,
+# private owned repos are included too.
+github-release-version-checker audit-workflows owner nickromney --repo-filter 'private-*'
+```
+
 ## Use Cases
+
+### GitHub Actions Supply-Chain Audits
+
+Audit GitHub Actions references for floating refs such as `@main`, `@master`, and `@latest`:
+
+```bash
+github-release-version-checker audit-workflows local --path . --only-floating
+github-release-version-checker audit-workflows owner my-org --only-floating --fail-on floating
+```
+
+Audit workflow container images separately:
+
+```bash
+github-release-version-checker audit-containers local --path . --only-floating
+```
+
+The audit command reports:
+
+- step `uses:` action references
+- reusable workflow `jobs.<job>.uses`
+- `docker://` action references
+
+By default, latest-version resolution uses a 7-day cooldown similar to Dependabot. Use `--cooldown 0` to disable that delay.
+
+`LATEST` means the highest eligible upstream release or tag after applying the cooldown. It is not constrained to the current major line already in use.
+
+Use `--pin-sha` to resolve the latest upstream commit SHA for each action and show a copy-pasteable pinned `uses:` value in occurrence output.
+
+Use `LATEST AGE` to see how many days old the selected upstream release is.
+
+Use `--view summary` to aggregate versions in use, or `--view occurrences` to list every file, job, step, and line.
+
+In local `--view occurrences` output, workflow paths are rendered as absolute filesystem paths so terminals and IDEs can open them directly.
+
+## Shell Completions
+
+The CLI exposes Cobra shell completions via the built-in `completion` command:
+
+```bash
+# zsh
+github-release-version-checker completion zsh > ~/.zsh/completions/_github-release-version-checker
+
+# bash
+github-release-version-checker completion bash > ~/.local/share/bash-completion/completions/github-release-version-checker
+
+# fish
+github-release-version-checker completion fish > ~/.config/fish/completions/github-release-version-checker.fish
+```
+
+Use `github-release-version-checker completion --help` for the full shell list and install patterns.
+
+## Agent Skill
+
+The repository bundles a Codex skill at `skills/use-github-release-version-checker/`.
+
+The skill teaches agents to:
+
+- prefer explicit subcommands such as `check`, `audit-workflows`, and `audit-containers`
+- default to local-first workflow audits when a token is not necessary
+- use `-o json` for machine-readable output and `--view occurrences -o markdown` for clickable file locations
+- use `owner` for remote bulk scans, with user-owner private repos only when authenticated as that same owner
+- treat `audit-workflows` and `audit-containers` as separate surfaces
+
+To install it into a local Codex skills directory:
+
+```bash
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R skills/use-github-release-version-checker "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
 
 ### Self-Hosted Runner Compliance
 
@@ -238,6 +351,12 @@ Three output modes for different use cases:
 1. **Terminal**: Human-readable with colours and tables
 2. **JSON**: Machine-readable for automation and monitoring
 3. **CI**: GitHub Actions annotations and job summaries
+
+The audit commands also support:
+
+1. **Table**: Summary or occurrence-oriented dependency reports
+2. **JSON**: Structured scan metadata, summary rows, and occurrences
+3. **CSV**: Spreadsheet-friendly export for org-wide reporting
 
 ### Rate Limiting
 

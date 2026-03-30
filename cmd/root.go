@@ -48,23 +48,18 @@ var (
 	grey   = colour.New(colour.FgHiBlack) // Faint grey for timestamps
 )
 
-// SetVersionInfo sets the version information from the main package
-func SetVersionInfo(version, build, commit string) {
-	appVersion = version
-	buildTime = build
-	gitCommit = commit
-}
-
-var rootCmd = &cobra.Command{
-	Use:   "github-release-version-checker",
-	Short: "Check GitHub release version status against expiry policies",
-	Long: `Check if versions are up to date against configurable expiry policies.
+const (
+	rootShort = "Check GitHub release version status against expiry policies"
+	rootLong  = `Check if versions are up to date against configurable expiry policies.
 
 Supports multiple repositories with both time-based (days) and version-based
-(semantic versioning) policies. Defaults to GitHub Actions runner with 30-day policy.`,
-	Example: `  # Check latest GitHub Actions runner version (default, days-based policy)
+(semantic versioning) policies. Defaults to GitHub Actions runner with 30-day policy.`
+	rootExample = `  # Check latest GitHub Actions runner version (default, days-based policy)
   github-release-version-checker
   github-release-version-checker -c 2.328.0
+
+  # Explicit check command
+  github-release-version-checker check --repo k8s -c 1.28.0
 
   # Kubernetes (version-based: 3 minor versions supported)
   github-release-version-checker --repo kubernetes/kubernetes -c 1.31.12
@@ -87,35 +82,72 @@ Supports multiple repositories with both time-based (days) and version-based
   github-release-version-checker -c 2.328.0 --json
 
   # CI mode for GitHub Actions
-  github-release-version-checker --repo kubernetes/kubernetes -c 1.28.0 --ci`,
-	RunE: run,
+  github-release-version-checker --repo kubernetes/kubernetes -c 1.28.0 --ci
+
+  # Audit local repositories
+  github-release-version-checker audit-workflows local --path ~/src --repo-filter 'backend-api-*'
+
+  # Ignore versions released in the last 7 days by default; set --cooldown 0 for immediate latest
+  github-release-version-checker audit-workflows local --path ~/src --cooldown 0
+
+  # Show the latest upstream SHA and copy-pasteable pinned refs
+  github-release-version-checker audit-workflows local --path ~/src --pin-sha --view occurrences
+
+  # Show every usage with absolute local workflow paths
+  github-release-version-checker audit-workflows local --path ~/src --view occurrences
+
+  # Audit container image references
+  github-release-version-checker audit-containers local --path ~/src --pinning floating
+
+  # Audit a GitHub owner boundary (user or organisation)
+  github-release-version-checker audit-workflows owner my-org --only-floating --output json
+
+  # Generate shell completions
+  github-release-version-checker completion zsh
+  github-release-version-checker completion bash`
+)
+
+// SetVersionInfo sets the version information from the main package
+func SetVersionInfo(version, build, commit string) {
+	appVersion = version
+	buildTime = build
+	gitCommit = commit
 }
 
-func init() {
-	rootCmd.Flags().StringVarP(&comparisonVersion, "compare", "c", "", "version to compare against (e.g., 2.327.1)")
-	rootCmd.Flags().IntVarP(&criticalAgeDays, "critical-days", "d", 12, "days before critical warning")
-	rootCmd.Flags().IntVarP(&maxAgeDays, "max-days", "m", 30, "days before version expires")
-	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.Flags().BoolVar(&jsonOutput, "json", false, "output as JSON")
-	rootCmd.Flags().BoolVar(&ciOutput, "ci", false, "format output for CI/GitHub Actions")
-	rootCmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "quiet output (suppress expiry table)")
-	rootCmd.Flags().StringVarP(&githubToken, "token", "t", os.Getenv("GITHUB_TOKEN"), "GitHub token (or GITHUB_TOKEN env var)")
-	rootCmd.Flags().BoolVar(&showVersion, "version", false, "show version information")
-	rootCmd.Flags().BoolVarP(&noCache, "no-cache", "n", false, "bypass embedded cache and always fetch from GitHub API")
-
-	// Multi-repository support flags
-	rootCmd.Flags().StringVarP(&repository, "repo", "r", "", "repository to check (format: owner/repo, e.g., 'kubernetes/kubernetes', 'pulumi/pulumi')")
-	rootCmd.Flags().StringVar(&cachePath, "cache", "", "path to custom cache file")
-	rootCmd.Flags().StringVar(&policyType, "policy", "", "policy type: 'days' or 'versions' (auto-detected if not specified)")
-	rootCmd.Flags().IntVar(&maxVersions, "max-versions", 3, "maximum minor versions behind before expiry (for version-based policy)")
-}
+var rootCmd = newRootCommand()
 
 func Execute() error {
 	return rootCmd.Execute()
 }
 
+func newRootCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "github-release-version-checker",
+		Short:   rootShort,
+		Long:    rootLong,
+		Example: rootExample,
+		RunE:    runCheck,
+	}
+
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
+
+	bindCheckFlags(cmd)
+	cmd.AddCommand(
+		buildCheckCommand(),
+		buildAuditWorkflowsCommand(),
+		buildAuditContainersCommand(),
+	)
+
+	return cmd
+}
+
 // detectGitHubToken attempts to find a GitHub token from multiple sources
 func detectGitHubToken(providedToken string) string {
+	return detectGitHubTokenForHost(providedToken, "github.com")
+}
+
+func detectGitHubTokenForHost(providedToken, host string) string {
 	// 1. Use explicitly provided token (via -t flag or GITHUB_TOKEN env var)
 	//    Note: GITHUB_TOKEN is automatically available in GitHub Actions
 	if providedToken != "" {
@@ -123,7 +155,7 @@ func detectGitHubToken(providedToken string) string {
 	}
 
 	// 2. Try to get token from GitHub CLI
-	ghToken, err := getGitHubCLIToken()
+	ghToken, err := getGitHubCLIToken(host)
 	if err == nil && ghToken != "" {
 		return ghToken
 	}
@@ -133,8 +165,13 @@ func detectGitHubToken(providedToken string) string {
 }
 
 // getGitHubCLIToken attempts to retrieve a token from the GitHub CLI
-func getGitHubCLIToken() (string, error) {
-	cmd := exec.Command("gh", "auth", "token")
+func getGitHubCLIToken(host string) (string, error) {
+	args := []string{"auth", "token"}
+	if host != "" && host != "github.com" {
+		args = append(args, "--hostname", host)
+	}
+
+	cmd := exec.Command("gh", args...)
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -148,7 +185,7 @@ func getGitHubCLIToken() (string, error) {
 	return token, nil
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func runCheck(cmd *cobra.Command, args []string) error {
 	// Disable automatic usage printing on error
 	cmd.SilenceUsage = true
 
@@ -236,7 +273,7 @@ func run(cmd *cobra.Command, args []string) error {
 		// For JSON output, return error as JSON
 		if jsonOutput {
 			outputErrorJSON(err)
-			os.Exit(1)
+			return &ExitError{Code: 1, Silent: true}
 		}
 
 		// For CI output, return error immediately without formatting
@@ -256,7 +293,7 @@ func run(cmd *cobra.Command, args []string) error {
 				yellow.Printf("💡 Most recent version is: v%s (Released %s)\n", latestRelease.Version, formatUKDate(latestRelease.PublishedAt))
 			}
 
-			os.Exit(1)
+			return &ExitError{Code: 1, Silent: true}
 		}
 
 		// If version doesn't exist, show helpful context instead of just erroring
@@ -283,7 +320,7 @@ func run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
-			os.Exit(1) // Exit with error code after showing helpful context
+			return &ExitError{Code: 1, Silent: true}
 		}
 		// Check if it's an API error (rate limiting, network, etc.)
 		if strings.Contains(err.Error(), "failed to fetch") || strings.Contains(err.Error(), "failed to get") || strings.Contains(err.Error(), "failed to list") {
@@ -327,7 +364,7 @@ func run(cmd *cobra.Command, args []string) error {
 				yellow.Printf("   Error details: %v\n", err)
 			}
 
-			os.Exit(1)
+			return &ExitError{Code: 1, Silent: true}
 		}
 
 		return fmt.Errorf("analysis failed: %w", err)
@@ -390,19 +427,7 @@ func outputCI(analysis *checker.Analysis) error {
 			comparisonDate = fmt.Sprintf(" (%s)", formatUKDate(*analysis.ComparisonReleasedAt))
 		}
 
-		expiryInfo := ""
-		if analysis.FirstNewerReleaseDate != nil {
-			expiryDate := analysis.FirstNewerReleaseDate.AddDate(0, 0, 30)
-
-			if analysis.IsExpired {
-				expiryInfo = fmt.Sprintf(" EXPIRED %s", formatUKDate(expiryDate))
-			} else if analysis.IsCritical {
-				daysLeft := 30 - analysis.DaysSinceUpdate
-				expiryInfo = fmt.Sprintf(" EXPIRES %s (%d days)", formatUKDate(expiryDate), daysLeft)
-			} else {
-				expiryInfo = fmt.Sprintf(" expires %s", formatUKDate(expiryDate))
-			}
-		}
+		expiryInfo := formatDaysPolicyExpiryInfo(analysis)
 
 		latestDate := ""
 		for _, r := range analysis.RecentReleases {
@@ -528,15 +553,16 @@ func writeGitHubSummary(summaryFile string, analysis *checker.Analysis) error {
 	}
 
 	// Action required section
-	if status == checker.StatusExpired {
+	switch status {
+	case checker.StatusExpired:
 		fmt.Fprintf(f, "\n### ⚠️ Action Required\n\n")
 		fmt.Fprintf(f, "**Update to v%s or later immediately.** ", analysis.FirstNewerVersion)
 		fmt.Fprintf(f, "GitHub will not queue jobs to runners with expired versions.\n")
-	} else if status == checker.StatusCritical {
+	case checker.StatusCritical:
 		daysLeft := analysis.MaxAgeDays - analysis.DaysSinceUpdate
 		fmt.Fprintf(f, "\n### ⚠️ Update Soon\n\n")
 		fmt.Fprintf(f, "Version expires in **%d days**. Update to v%s or later.\n", daysLeft, analysis.FirstNewerVersion)
-	} else if status == checker.StatusWarning {
+	case checker.StatusWarning:
 		fmt.Fprintf(f, "\n### ℹ️ Update Available\n\n")
 		fmt.Fprintf(f, "A newer version (v%s) is available.\n", analysis.LatestVersion)
 	}
@@ -654,19 +680,7 @@ func printStatus(analysis *checker.Analysis) {
 				expiryInfo = fmt.Sprintf(" (%d minor versions behind)", analysis.MinorVersionsBehind)
 			}
 		} else {
-			// For days-based policies, show expiry dates
-			if analysis.FirstNewerReleaseDate != nil {
-				expiryDate := analysis.FirstNewerReleaseDate.AddDate(0, 0, 30)
-
-				if analysis.IsExpired {
-					expiryInfo = fmt.Sprintf(" EXPIRED %s", formatUKDate(expiryDate))
-				} else if analysis.IsCritical {
-					daysLeft := 30 - analysis.DaysSinceUpdate
-					expiryInfo = fmt.Sprintf(" EXPIRES %s (%d days)", formatUKDate(expiryDate), daysLeft)
-				} else {
-					expiryInfo = fmt.Sprintf(" expires %s", formatUKDate(expiryDate))
-				}
-			}
+			expiryInfo = formatDaysPolicyExpiryInfo(analysis)
 		}
 
 		latestDate := ""
@@ -687,6 +701,32 @@ func printStatus(analysis *checker.Analysis) {
 	}
 
 	colourFunc.Println(statusLine)
+}
+
+func formatDaysPolicyExpiryInfo(analysis *checker.Analysis) string {
+	if analysis == nil || analysis.FirstNewerReleaseDate == nil {
+		return ""
+	}
+
+	maxAge := analysis.MaxAgeDays
+	if maxAge <= 0 {
+		maxAge = maxAgeDays
+	}
+	if maxAge <= 0 {
+		maxAge = 30
+	}
+
+	expiryDate := analysis.FirstNewerReleaseDate.AddDate(0, 0, maxAge)
+	daysLeft := maxAge - analysis.DaysSinceUpdate
+
+	switch {
+	case analysis.IsExpired || daysLeft < 0:
+		return fmt.Sprintf(" EXPIRED %s", formatUKDate(expiryDate))
+	case analysis.IsCritical:
+		return fmt.Sprintf(" EXPIRES %s (%d days)", formatUKDate(expiryDate), daysLeft)
+	default:
+		return fmt.Sprintf(" expires %s", formatUKDate(expiryDate))
+	}
 }
 
 func printExpiryTable(analysis *checker.Analysis, phantomVersionStr string) {

@@ -62,8 +62,16 @@ test-coverage: test ## Run tests with coverage report
 	$(GOCMD) tool cover -html=coverage.out
 
 lint: ## Run Go linter
-	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
-	golangci-lint run ./...
+	@GOBIN_DIR="$$(go env GOBIN)"; \
+	if [ -z "$$GOBIN_DIR" ]; then \
+		GOBIN_DIR="$$(go env GOPATH)/bin"; \
+	fi; \
+	GOLANGCI_LINT_BIN="$$GOBIN_DIR/golangci-lint"; \
+	if [ ! -x "$$GOLANGCI_LINT_BIN" ] || ! "$$GOLANGCI_LINT_BIN" version 2>/dev/null | grep -q "version 2."; then \
+		echo "Installing golangci-lint v2.11.4..."; \
+		GOBIN="$$GOBIN_DIR" go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4; \
+	fi; \
+	"$$GOLANGCI_LINT_BIN" run ./...
 
 lint-md: ## Run markdown linter
 	@which markdownlint > /dev/null || (echo "markdownlint not found. Install with: npm install -g markdownlint-cli" && exit 1)

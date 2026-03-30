@@ -15,28 +15,42 @@ jobs:
       actions: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6.3.0
         with:
           go-version: "1.21"
           cache: true
 
-      - name: checkov scan
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: "."
-          framework: all
-          skip_framework: ansible
-          quiet: true
-          soft_fail: true
-          output_format: cli,github_failed_only
-          output_file_path: console
-          skip_check: CKV_GHA_7,CKV2_GHA_1
+      - name: Checkov scan
+        run: |
+          docker run --rm \
+            -v "$PWD":/work \
+            -w /work \
+            bridgecrew/checkov:2.0.930@sha256:079148f3df7777a62f196f1ffdbaeca5b41a72a3a66412df1d4a5cecc6aaf08a \
+            -d . \
+            --framework github_actions \
+            --skip-check CKV_GHA_7,CKV2_GHA_1 \
+            --quiet \
+            --soft-fail \
+            -o cli
+
+      - name: Checkov annotations
+        run: |
+          docker run --rm \
+            -v "$PWD":/work \
+            -w /work \
+            bridgecrew/checkov:2.0.930@sha256:079148f3df7777a62f196f1ffdbaeca5b41a72a3a66412df1d4a5cecc6aaf08a \
+            -d . \
+            --framework github_actions \
+            --skip-check CKV_GHA_7,CKV2_GHA_1 \
+            --quiet \
+            --soft-fail \
+            -o github_failed_only
 
       - name: yaml-lint
-        uses: ibiqlik/action-yamllint@v3
+        uses: ibiqlik/action-yamllint@v3.1.1
         with:
           file_or_dir: .github/workflows
           format: github
@@ -45,6 +59,6 @@ jobs:
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Run linter
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v9.2.0
         with:
-          version: latest
+          version: v2.11.4

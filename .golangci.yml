@@ -1,11 +1,17 @@
-linters:
-  enable:
-    - misspell
-    - gofmt
-    - govet
+version: "2"
 
-linters-settings:
-  misspell:
-    locale: UK
-    ignore-words:
-      - color  # Keep for imported package names (fatih/color)
+linters:
+  default: none
+  enable:
+    - govet
+    - misspell
+  settings:
+    misspell:
+      locale: UK
+      ignore-rules:
+        - color
+        - organization
+
+formatters:
+  enable:
+    - gofmt
