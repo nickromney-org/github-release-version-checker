@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	colour "github.com/fatih/color"
 	"github.com/nickromney-org/github-release-version-checker/internal/audit"
 )
 
@@ -335,13 +336,16 @@ func captureStdout(t *testing.T, fn func()) string {
 	t.Helper()
 
 	oldStdout := os.Stdout
+	oldColourOutput := colour.Output
 	reader, writer, err := os.Pipe()
 	if err != nil {
 		t.Fatalf("os.Pipe() error = %v", err)
 	}
 	os.Stdout = writer
+	colour.Output = writer
 	defer func() {
 		os.Stdout = oldStdout
+		colour.Output = oldColourOutput
 	}()
 
 	fn()

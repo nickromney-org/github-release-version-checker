@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -71,10 +72,12 @@ func TestOutputJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := outputJSON(tt.analysis)
-			if err != nil {
-				t.Fatalf("outputJSON() error = %v", err)
-			}
+			captureStdout(t, func() {
+				err := outputJSON(tt.analysis)
+				if err != nil {
+					t.Fatalf("outputJSON() error = %v", err)
+				}
+			})
 
 			// Verify JSON can be marshalled
 			data, err := tt.analysis.MarshalJSON()
@@ -118,11 +121,12 @@ func TestOutputErrorJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Call the function (it prints to stdout)
-			outputErrorJSON(tt.err)
-
-			// For now, just verify it doesn't panic
-			// In a more thorough test, we'd capture stdout and parse JSON
+			output := captureStdout(t, func() {
+				outputErrorJSON(tt.err)
+			})
+			if !strings.Contains(output, tt.wantErr) {
+				t.Fatalf("outputErrorJSON() output = %q, want to contain %q", output, tt.wantErr)
+			}
 		})
 	}
 }
@@ -206,7 +210,7 @@ func TestDetectGitHubToken(t *testing.T) {
 
 // TestOutputCI tests CI output formatting
 func TestOutputCI(t *testing.T) {
-	now := time.Now()
+	now := time.Date(2026, time.March, 30, 12, 0, 0, 0, time.UTC)
 	tests := []struct {
 		name         string
 		analysis     *checker.Analysis
@@ -237,11 +241,12 @@ func TestOutputCI(t *testing.T) {
 				ReleasesBehind:        1,
 				DaysSinceUpdate:       5,
 				FirstNewerVersion:     mustParseVersion("2.329.0"),
-				FirstNewerReleaseDate: &now,
+				FirstNewerReleaseDate: timePtr(now.AddDate(0, 0, -5)),
 				ComparisonReleasedAt:  &now,
+				MaxAgeDays:            30,
 			},
 			wantContains: []string{
-				"::warning",
+				"::notice",
 				"2.329.0",
 				"2.328.0",
 			},
@@ -257,8 +262,9 @@ func TestOutputCI(t *testing.T) {
 				ReleasesBehind:        2,
 				DaysSinceUpdate:       35,
 				FirstNewerVersion:     mustParseVersion("2.328.0"),
-				FirstNewerReleaseDate: &now,
+				FirstNewerReleaseDate: timePtr(now.AddDate(0, 0, -35)),
 				ComparisonReleasedAt:  &now,
+				MaxAgeDays:            30,
 			},
 			wantContains: []string{
 				"::error",
@@ -270,11 +276,16 @@ func TestOutputCI(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Capture stdout by temporarily redirecting
-			// For now, just verify it doesn't error
-			err := outputCI(tt.analysis)
-			if err != nil {
-				t.Errorf("outputCI() error = %v", err)
+			output := captureStdout(t, func() {
+				err := outputCI(tt.analysis)
+				if err != nil {
+					t.Errorf("outputCI() error = %v", err)
+				}
+			})
+			for _, want := range tt.wantContains {
+				if !strings.Contains(output, want) {
+					t.Fatalf("outputCI() output = %q, want to contain %q", output, want)
+				}
 			}
 		})
 	}
@@ -282,7 +293,7 @@ func TestOutputCI(t *testing.T) {
 
 // TestOutputTerminal tests terminal output formatting
 func TestOutputTerminal(t *testing.T) {
-	now := time.Now()
+	now := time.Date(2026, time.March, 30, 12, 0, 0, 0, time.UTC)
 	tests := []struct {
 		name     string
 		analysis *checker.Analysis
@@ -308,8 +319,9 @@ func TestOutputTerminal(t *testing.T) {
 				ReleasesBehind:        2,
 				DaysSinceUpdate:       35,
 				FirstNewerVersion:     mustParseVersion("2.328.0"),
-				FirstNewerReleaseDate: &now,
+				FirstNewerReleaseDate: timePtr(now.AddDate(0, 0, -35)),
 				ComparisonReleasedAt:  &now,
+				MaxAgeDays:            30,
 			},
 			wantErr: false,
 		},
@@ -317,10 +329,12 @@ func TestOutputTerminal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := outputTerminal(tt.analysis)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("outputTerminal() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			captureStdout(t, func() {
+				err := outputTerminal(tt.analysis)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("outputTerminal() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			})
 		})
 	}
 }
@@ -432,17 +446,39 @@ func getJSONType(v interface{}) string {
 
 // TestCIOutputAnnotations tests that CI output includes proper GitHub Actions annotations
 func TestCIOutputAnnotations(t *testing.T) {
-	now := time.Now()
+	now := time.Date(2026, time.March, 30, 12, 0, 0, 0, time.UTC)
 
 	// Test that different statuses produce appropriate annotations
 	tests := []struct {
 		name               string
 		status             checker.Status
+		daysSinceUpdate    int
 		expectedAnnotation string
+		wantContains       []string
+		wantNotContains    []string
 	}{
-		{"warning status", checker.StatusWarning, "::warning"},
-		{"critical status", checker.StatusCritical, "::warning"},
-		{"expired status", checker.StatusExpired, "::error"},
+		{
+			name:               "warning status",
+			status:             checker.StatusWarning,
+			daysSinceUpdate:    5,
+			expectedAnnotation: "::notice",
+			wantContains:       []string{"expires 24 Apr 2026"},
+		},
+		{
+			name:               "critical status",
+			status:             checker.StatusCritical,
+			daysSinceUpdate:    25,
+			expectedAnnotation: "::warning",
+			wantContains:       []string{"EXPIRES 04 Apr 2026 (5 days)"},
+			wantNotContains:    []string{"(-"},
+		},
+		{
+			name:               "expired status",
+			status:             checker.StatusExpired,
+			daysSinceUpdate:    35,
+			expectedAnnotation: "::error",
+			wantContains:       []string{"EXPIRED 25 Mar 2026"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -454,17 +490,31 @@ func TestCIOutputAnnotations(t *testing.T) {
 				IsExpired:             tt.status == checker.StatusExpired,
 				IsCritical:            tt.status == checker.StatusCritical,
 				ReleasesBehind:        2,
-				DaysSinceUpdate:       35,
+				DaysSinceUpdate:       tt.daysSinceUpdate,
 				FirstNewerVersion:     mustParseVersion("2.328.0"),
-				FirstNewerReleaseDate: &now,
+				FirstNewerReleaseDate: timePtr(now.AddDate(0, 0, -tt.daysSinceUpdate)),
 				ComparisonReleasedAt:  &now,
+				MaxAgeDays:            30,
 			}
 
-			// For now, just verify outputCI doesn't error
-			// A more thorough test would capture stdout and verify annotations
-			err := outputCI(analysis)
-			if err != nil {
-				t.Errorf("outputCI() error = %v", err)
+			output := captureStdout(t, func() {
+				err := outputCI(analysis)
+				if err != nil {
+					t.Errorf("outputCI() error = %v", err)
+				}
+			})
+			if !strings.Contains(output, tt.expectedAnnotation) {
+				t.Fatalf("outputCI() output = %q, want to contain %q", output, tt.expectedAnnotation)
+			}
+			for _, want := range tt.wantContains {
+				if !strings.Contains(output, want) {
+					t.Fatalf("outputCI() output = %q, want to contain %q", output, want)
+				}
+			}
+			for _, unwanted := range tt.wantNotContains {
+				if strings.Contains(output, unwanted) {
+					t.Fatalf("outputCI() output = %q, did not expect %q", output, unwanted)
+				}
 			}
 		})
 	}
@@ -480,23 +530,33 @@ func TestOutputWithNoComparison(t *testing.T) {
 
 	// All output functions should handle nil comparison gracefully
 	t.Run("terminal output", func(t *testing.T) {
-		err := outputTerminal(analysis)
-		if err != nil {
-			t.Errorf("outputTerminal() with nil comparison error = %v", err)
-		}
+		captureStdout(t, func() {
+			err := outputTerminal(analysis)
+			if err != nil {
+				t.Errorf("outputTerminal() with nil comparison error = %v", err)
+			}
+		})
 	})
 
 	t.Run("CI output", func(t *testing.T) {
-		err := outputCI(analysis)
-		if err != nil {
-			t.Errorf("outputCI() with nil comparison error = %v", err)
-		}
+		captureStdout(t, func() {
+			err := outputCI(analysis)
+			if err != nil {
+				t.Errorf("outputCI() with nil comparison error = %v", err)
+			}
+		})
 	})
 
 	t.Run("JSON output", func(t *testing.T) {
-		err := outputJSON(analysis)
-		if err != nil {
-			t.Errorf("outputJSON() with nil comparison error = %v", err)
-		}
+		captureStdout(t, func() {
+			err := outputJSON(analysis)
+			if err != nil {
+				t.Errorf("outputJSON() with nil comparison error = %v", err)
+			}
+		})
 	})
+}
+
+func timePtr(value time.Time) *time.Time {
+	return &value
 }

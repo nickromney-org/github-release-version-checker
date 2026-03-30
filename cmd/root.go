@@ -427,19 +427,7 @@ func outputCI(analysis *checker.Analysis) error {
 			comparisonDate = fmt.Sprintf(" (%s)", formatUKDate(*analysis.ComparisonReleasedAt))
 		}
 
-		expiryInfo := ""
-		if analysis.FirstNewerReleaseDate != nil {
-			expiryDate := analysis.FirstNewerReleaseDate.AddDate(0, 0, 30)
-
-			if analysis.IsExpired {
-				expiryInfo = fmt.Sprintf(" EXPIRED %s", formatUKDate(expiryDate))
-			} else if analysis.IsCritical {
-				daysLeft := 30 - analysis.DaysSinceUpdate
-				expiryInfo = fmt.Sprintf(" EXPIRES %s (%d days)", formatUKDate(expiryDate), daysLeft)
-			} else {
-				expiryInfo = fmt.Sprintf(" expires %s", formatUKDate(expiryDate))
-			}
-		}
+		expiryInfo := formatDaysPolicyExpiryInfo(analysis)
 
 		latestDate := ""
 		for _, r := range analysis.RecentReleases {
@@ -692,19 +680,7 @@ func printStatus(analysis *checker.Analysis) {
 				expiryInfo = fmt.Sprintf(" (%d minor versions behind)", analysis.MinorVersionsBehind)
 			}
 		} else {
-			// For days-based policies, show expiry dates
-			if analysis.FirstNewerReleaseDate != nil {
-				expiryDate := analysis.FirstNewerReleaseDate.AddDate(0, 0, 30)
-
-				if analysis.IsExpired {
-					expiryInfo = fmt.Sprintf(" EXPIRED %s", formatUKDate(expiryDate))
-				} else if analysis.IsCritical {
-					daysLeft := 30 - analysis.DaysSinceUpdate
-					expiryInfo = fmt.Sprintf(" EXPIRES %s (%d days)", formatUKDate(expiryDate), daysLeft)
-				} else {
-					expiryInfo = fmt.Sprintf(" expires %s", formatUKDate(expiryDate))
-				}
-			}
+			expiryInfo = formatDaysPolicyExpiryInfo(analysis)
 		}
 
 		latestDate := ""
@@ -725,6 +701,32 @@ func printStatus(analysis *checker.Analysis) {
 	}
 
 	colourFunc.Println(statusLine)
+}
+
+func formatDaysPolicyExpiryInfo(analysis *checker.Analysis) string {
+	if analysis == nil || analysis.FirstNewerReleaseDate == nil {
+		return ""
+	}
+
+	maxAge := analysis.MaxAgeDays
+	if maxAge <= 0 {
+		maxAge = maxAgeDays
+	}
+	if maxAge <= 0 {
+		maxAge = 30
+	}
+
+	expiryDate := analysis.FirstNewerReleaseDate.AddDate(0, 0, maxAge)
+	daysLeft := maxAge - analysis.DaysSinceUpdate
+
+	switch {
+	case analysis.IsExpired || daysLeft < 0:
+		return fmt.Sprintf(" EXPIRED %s", formatUKDate(expiryDate))
+	case analysis.IsCritical:
+		return fmt.Sprintf(" EXPIRES %s (%d days)", formatUKDate(expiryDate), daysLeft)
+	default:
+		return fmt.Sprintf(" expires %s", formatUKDate(expiryDate))
+	}
 }
 
 func printExpiryTable(analysis *checker.Analysis, phantomVersionStr string) {
