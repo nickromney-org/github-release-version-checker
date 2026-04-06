@@ -24,7 +24,7 @@ The GitHub Release Version Checker helps you stay current with software releases
 <!-- version-check-start -->
 ## Daily Version Checks
 
-**Last updated:** 05 Apr 2026 09:26 UTC
+**Last updated:** 06 Apr 2026 09:56 UTC
 
 | Repository | Status | Latest Version | Command |
 |------------|--------|----------------|---------|
@@ -41,12 +41,12 @@ The GitHub Release Version Checker helps you stay current with software releases
 📅 Release Expiry Timeline
 ─────────────────────────────────────────────────────
 Version    Release Date   Expiry Date    Status
-2.331.0    09 Jan 2026    27 Mar 2026    ❌ Expired 8 days ago
-2.332.0    25 Feb 2026    17 Apr 2026    ✅ Valid (12 days left)
-2.333.0    18 Mar 2026    26 Apr 2026    ✅ Valid (21 days left)
-2.333.1    27 Mar 2026    -              ✅ Latest (8 days ago)
+2.331.0    09 Jan 2026    27 Mar 2026    ❌ Expired 9 days ago
+2.332.0    25 Feb 2026    17 Apr 2026    ✅ Valid (11 days left)
+2.333.0    18 Mar 2026    26 Apr 2026    ✅ Valid (20 days left)
+2.333.1    27 Mar 2026    -              ✅ Latest (9 days ago)
 
-Checked at: 5 Apr 2026 09:26:44 UTC
+Checked at: 6 Apr 2026 09:56:28 UTC
 ```
 
 ## Quick Start
