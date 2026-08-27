@@ -24,29 +24,29 @@ The GitHub Release Version Checker helps you stay current with software releases
 <!-- version-check-start -->
 ## Daily Version Checks
 
-**Last updated:** 26 Aug 2026 09:26 UTC
+**Last updated:** 27 Aug 2026 19:17 UTC
 
 | Repository | Status | Latest Version | Command |
 |------------|--------|----------------|---------|
-| [GitHub Actions Runner](https://github.com/actions/runner/releases/tag/v2.336.0) | ![Status](https://img.shields.io/badge/current-green) | `v2.336.0` | `github-release-version-checker` |
-| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.15.9) | ![Status](https://img.shields.io/badge/current-green) | `v1.15.9` | `github-release-version-checker --repo hashicorp/terraform` |
-| [Node.js](https://github.com/nodejs/node/releases/tag/v26.7.0) | ![Status](https://img.shields.io/badge/current-green) | `v26.7.0` | `github-release-version-checker --repo node` |
+| [GitHub Actions Runner](https://github.com/actions/runner/releases/tag/v2.337.0) | ![Status](https://img.shields.io/badge/current-green) | `v2.337.0` | `github-release-version-checker` |
+| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.16.0) | ![Status](https://img.shields.io/badge/current-green) | `v1.16.0` | `github-release-version-checker --repo hashicorp/terraform` |
+| [Node.js](https://github.com/nodejs/node/releases/tag/v26.8.1) | ![Status](https://img.shields.io/badge/current-green) | `v26.8.1` | `github-release-version-checker --repo node` |
 
 ### GitHub Actions Runner Release Timeline
 
 ```text
-2.336.0
+2.337.0
 
 
 📅 Release Expiry Timeline
 ─────────────────────────────────────────────────────
 Version    Release Date   Expiry Date    Status
-2.334.0    21 Apr 2026    08 Jul 2026    ❌ Expired 48 days ago
-2.335.0    08 Jun 2026    09 Jul 2026    ❌ Expired 48 days ago
-2.335.1    09 Jun 2026    19 Aug 2026    ❌ Expired 6 days ago
-2.336.0    20 Jul 2026    -              ✅ Latest (36 days ago)
+2.335.0    08 Jun 2026    09 Jul 2026    ❌ Expired 49 days ago
+2.335.1    09 Jun 2026    19 Aug 2026    ❌ Expired 8 days ago
+2.336.0    20 Jul 2026    25 Sep 2026    ✅ Valid (28 days left)
+2.337.0    26 Aug 2026    -              ✅ Latest (1 day ago)
 
-Checked at: 26 Aug 2026 09:26:39 UTC
+Checked at: 27 Aug 2026 19:16:53 UTC
 ```
 
 ## Quick Start
