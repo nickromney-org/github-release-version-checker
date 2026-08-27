@@ -1,6 +1,31 @@
 {
-  "generated_at": "2026-03-28T06:53:47.002386116Z",
+  "generated_at": "2026-08-27T17:15:06.530282983Z",
   "releases": [
+    {
+      "version": "2.337.0",
+      "published_at": "2026-08-26T14:33:29Z",
+      "url": "https://github.com/actions/runner/releases/tag/v2.337.0"
+    },
+    {
+      "version": "2.336.0",
+      "published_at": "2026-07-20T17:45:55Z",
+      "url": "https://github.com/actions/runner/releases/tag/v2.336.0"
+    },
+    {
+      "version": "2.335.1",
+      "published_at": "2026-06-09T01:32:05Z",
+      "url": "https://github.com/actions/runner/releases/tag/v2.335.1"
+    },
+    {
+      "version": "2.335.0",
+      "published_at": "2026-06-08T17:08:55Z",
+      "url": "https://github.com/actions/runner/releases/tag/v2.335.0"
+    },
+    {
+      "version": "2.334.0",
+      "published_at": "2026-04-21T18:54:03Z",
+      "url": "https://github.com/actions/runner/releases/tag/v2.334.0"
+    },
     {
       "version": "2.333.1",
       "published_at": "2026-03-27T17:01:07Z",
