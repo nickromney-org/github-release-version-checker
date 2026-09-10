@@ -24,13 +24,13 @@ The GitHub Release Version Checker helps you stay current with software releases
 <!-- version-check-start -->
 ## Daily Version Checks
 
-**Last updated:** 09 Sep 2026 13:11 UTC
+**Last updated:** 10 Sep 2026 13:09 UTC
 
 | Repository | Status | Latest Version | Command |
 |------------|--------|----------------|---------|
 | [GitHub Actions Runner](https://github.com/actions/runner/releases/tag/v2.337.0) | ![Status](https://img.shields.io/badge/current-green) | `v2.337.0` | `github-release-version-checker` |
-| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.16.1) | ![Status](https://img.shields.io/badge/current-green) | `v1.16.1` | `github-release-version-checker --repo hashicorp/terraform` |
-| [Node.js](https://github.com/nodejs/node/releases/tag/v26.8.1) | ![Status](https://img.shields.io/badge/current-green) | `v26.8.1` | `github-release-version-checker --repo node` |
+| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.16.2) | ![Status](https://img.shields.io/badge/current-green) | `v1.16.2` | `github-release-version-checker --repo hashicorp/terraform` |
+| [Node.js](https://github.com/nodejs/node/releases/tag/v26.8.2) | ![Status](https://img.shields.io/badge/current-green) | `v26.8.2` | `github-release-version-checker --repo node` |
 
 ### GitHub Actions Runner Release Timeline
 
@@ -41,12 +41,12 @@ The GitHub Release Version Checker helps you stay current with software releases
 📅 Release Expiry Timeline
 ─────────────────────────────────────────────────────
 Version    Release Date   Expiry Date    Status
-2.335.0    08 Jun 2026    09 Jul 2026    ❌ Expired 62 days ago
-2.335.1    09 Jun 2026    19 Aug 2026    ❌ Expired 20 days ago
-2.336.0    20 Jul 2026    25 Sep 2026    ✅ Valid (16 days left)
-2.337.0    26 Aug 2026    -              ✅ Latest (13 days ago)
+2.335.0    08 Jun 2026    09 Jul 2026    ❌ Expired 63 days ago
+2.335.1    09 Jun 2026    19 Aug 2026    ❌ Expired 21 days ago
+2.336.0    20 Jul 2026    25 Sep 2026    ✅ Valid (15 days left)
+2.337.0    26 Aug 2026    -              ✅ Latest (14 days ago)
 
-Checked at: 9 Sep 2026 13:11:08 UTC
+Checked at: 10 Sep 2026 13:08:57 UTC
 ```
 
 ## Quick Start
