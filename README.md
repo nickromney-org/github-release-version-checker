@@ -24,12 +24,12 @@ The GitHub Release Version Checker helps you stay current with software releases
 <!-- version-check-start -->
 ## Daily Version Checks
 
-**Last updated:** 22 Sep 2026 13:42 UTC
+**Last updated:** 23 Sep 2026 13:53 UTC
 
 | Repository | Status | Latest Version | Command |
 |------------|--------|----------------|---------|
 | [GitHub Actions Runner](https://github.com/actions/runner/releases/tag/v2.337.0) | ![Status](https://img.shields.io/badge/current-green) | `v2.337.0` | `github-release-version-checker` |
-| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.16.3) | ![Status](https://img.shields.io/badge/current-green) | `v1.16.3` | `github-release-version-checker --repo hashicorp/terraform` |
+| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.16.4) | ![Status](https://img.shields.io/badge/current-green) | `v1.16.4` | `github-release-version-checker --repo hashicorp/terraform` |
 | [Node.js](https://github.com/nodejs/node/releases/tag/v26.10.0) | ![Status](https://img.shields.io/badge/current-green) | `v26.10.0` | `github-release-version-checker --repo node` |
 
 ### GitHub Actions Runner Release Timeline
@@ -41,12 +41,12 @@ The GitHub Release Version Checker helps you stay current with software releases
 📅 Release Expiry Timeline
 ─────────────────────────────────────────────────────
 Version    Release Date   Expiry Date    Status
-2.335.0    08 Jun 2026    09 Jul 2026    ❌ Expired 75 days ago
-2.335.1    09 Jun 2026    19 Aug 2026    ❌ Expired 33 days ago
-2.336.0    20 Jul 2026    25 Sep 2026    ✅ Valid (3 days left)
-2.337.0    26 Aug 2026    -              ✅ Latest (26 days ago)
+2.335.0    08 Jun 2026    09 Jul 2026    ❌ Expired 76 days ago
+2.335.1    09 Jun 2026    19 Aug 2026    ❌ Expired 34 days ago
+2.336.0    20 Jul 2026    25 Sep 2026    ✅ Valid (2 days left)
+2.337.0    26 Aug 2026    -              ✅ Latest (27 days ago)
 
-Checked at: 22 Sep 2026 13:41:58 UTC
+Checked at: 23 Sep 2026 13:53:16 UTC
 ```
 
 ## Quick Start
