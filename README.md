@@ -24,13 +24,13 @@ The GitHub Release Version Checker helps you stay current with software releases
 <!-- version-check-start -->
 ## Daily Version Checks
 
-**Last updated:** 28 Oct 2026 15:31 UTC
+**Last updated:** 29 Oct 2026 15:39 UTC
 
 | Repository | Status | Latest Version | Command |
 |------------|--------|----------------|---------|
 | [GitHub Actions Runner](https://github.com/actions/runner/releases/tag/v2.338.2) | ![Status](https://img.shields.io/badge/current-green) | `v2.338.2` | `github-release-version-checker` |
-| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.17.0) | ![Status](https://img.shields.io/badge/current-green) | `v1.17.0` | `github-release-version-checker --repo hashicorp/terraform` |
-| [Node.js](https://github.com/nodejs/node/releases/tag/v26.12.1) | ![Status](https://img.shields.io/badge/current-green) | `v26.12.1` | `github-release-version-checker --repo node` |
+| [Terraform](https://github.com/hashicorp/terraform/releases/tag/v1.17.1) | ![Status](https://img.shields.io/badge/current-green) | `v1.17.1` | `github-release-version-checker --repo hashicorp/terraform` |
+| [Node.js](https://github.com/nodejs/node/releases/tag/v26.13.0) | ![Status](https://img.shields.io/badge/current-green) | `v26.13.0` | `github-release-version-checker --repo node` |
 
 ### GitHub Actions Runner Release Timeline
 
@@ -41,12 +41,12 @@ The GitHub Release Version Checker helps you stay current with software releases
 📅 Release Expiry Timeline
 ─────────────────────────────────────────────────────
 Version    Release Date   Expiry Date    Status
-2.336.0    20 Jul 2026    25 Sep 2026    ❌ Expired 33 days ago
-2.337.0    26 Aug 2026    05 Nov 2026    ✅ Valid (7 days left)
-2.338.0    06 Oct 2026    25 Nov 2026    ✅ Valid (27 days left)
-2.338.2    26 Oct 2026    -              ✅ Latest (2 days ago)
+2.336.0    20 Jul 2026    25 Sep 2026    ❌ Expired 34 days ago
+2.337.0    26 Aug 2026    05 Nov 2026    ✅ Valid (6 days left)
+2.338.0    06 Oct 2026    25 Nov 2026    ✅ Valid (26 days left)
+2.338.2    26 Oct 2026    -              ✅ Latest (3 days ago)
 
-Checked at: 28 Oct 2026 15:31:01 UTC
+Checked at: 29 Oct 2026 15:39:18 UTC
 ```
 
 ## Quick Start
